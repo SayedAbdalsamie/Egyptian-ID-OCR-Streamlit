@@ -1,18 +1,11 @@
 streamlit>=1.28.0
 torch>=2.1.0
 torchvision>=0.16.0
-# CRITICAL: Install headless OpenCV FIRST and explicitly exclude GUI versions
-# This must be before paddleocr/paddlepaddle to prevent them from installing GUI version
-opencv-python-headless>=4.8.0,<5.0.0
-# Explicitly exclude GUI versions (these will conflict if installed)
-opencv-python==0.0.0; python_version >= "3.0"
-opencv-contrib-python==0.0.0; python_version >= "3.0"
+opencv-python-headless>=4.8.0
 Pillow>=10.0.0
 python-dotenv>=1.0.0
 paddlepaddle>=2.5.0
 paddleocr>=2.7.0
 numpy>=1.24.0,<2.0.0
 huggingface_hub>=0.24.0
-# Re-install headless version after all dependencies to ensure it's used
-opencv-python-headless>=4.8.0,<5.0.0
 
