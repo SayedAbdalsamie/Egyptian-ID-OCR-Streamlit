@@ -1,8 +1,7 @@
 import os
 from typing import Dict, Tuple
 
-# Use the cv2 wrapper that handles headless/GUI version issues
-from services.cv2_wrapper import cv2
+import cv2
 
 
 Box = Tuple[int, int, int, int]

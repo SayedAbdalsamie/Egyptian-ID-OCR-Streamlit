@@ -1,9 +1,6 @@
 from paddleocr import PaddleOCR
 import os
-
-# Use the cv2 wrapper that handles headless/GUI version issues
-from services.cv2_wrapper import cv2
-
+import cv2
 import numpy as np
 from PIL import Image
 from services.utils import derive_birthdate_from_national_id, to_english_numerals
