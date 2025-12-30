@@ -1,21 +1,8 @@
 import os
 from typing import Dict, Tuple
 
-# Set environment variables before importing cv2 to ensure headless mode
-os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '0'
-os.environ['QT_QPA_PLATFORM'] = 'offscreen'
-# Try to work around libGL.so.1 issue
-os.environ['OPENCV_DISABLE_OPENCL'] = '1'
-
-try:
-    import cv2
-except ImportError as e:
-    # If cv2 import fails, try to provide a helpful error
-    raise ImportError(
-        f"Failed to import cv2: {e}. "
-        "Make sure opencv-python-headless is installed. "
-        "If using regular opencv-python, ensure libGL.so.1 is available."
-    ) from e
+# Use the cv2 wrapper that handles headless/GUI version issues
+from services.cv2_wrapper import cv2
 
 
 Box = Tuple[int, int, int, int]
