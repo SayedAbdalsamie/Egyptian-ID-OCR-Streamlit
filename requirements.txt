@@ -15,6 +15,3 @@ numpy>=1.24.0,<2.0.0
 huggingface_hub>=0.24.0
 # Re-install headless version after all dependencies to ensure it's used
 opencv-python-headless>=4.8.0,<5.0.0
-libgl1-mesa-glx
-libglib2.0-0
-libgl1
