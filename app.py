@@ -5,6 +5,11 @@ import streamlit as st
 from PIL import Image
 from dotenv import load_dotenv
 
+# Set OpenCV to use headless mode (no GUI dependencies)
+os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '0'
+# Disable GUI features in OpenCV
+os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+
 from services.detection_service import DetectionService
 from services.crop_service import CropService
 from services.ocr_service import OCRService

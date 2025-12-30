@@ -1,6 +1,19 @@
 from paddleocr import PaddleOCR
 import os
-import cv2
+
+# Set environment variables before importing cv2 to ensure headless mode
+os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '0'
+os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+os.environ['OPENCV_DISABLE_OPENCL'] = '1'
+
+try:
+    import cv2
+except ImportError as e:
+    raise ImportError(
+        f"Failed to import cv2: {e}. "
+        "Make sure opencv-python-headless is installed."
+    ) from e
+
 import numpy as np
 from PIL import Image
 from services.utils import derive_birthdate_from_national_id, to_english_numerals
