@@ -164,6 +164,25 @@ This Streamlit version provides:
 - **Easy Configuration**: Adjust settings via sidebar sliders
 - **Simplified Deployment**: Single command to run the entire application
 
+## Deployment to Streamlit Cloud
+
+This application is configured for deployment on Streamlit Cloud:
+
+1. **Push your code to GitHub** (already done)
+2. **Go to [share.streamlit.io](https://share.streamlit.io)**
+3. **Sign in with GitHub**
+4. **Click "New app"**
+5. **Select your repository**: `SayedAbdalsamie/Egyptian-ID-OCR-Streamlit`
+6. **Set the main file path**: `app.py`
+7. **Click "Deploy"**
+
+The app will automatically:
+- Use Python 3.11 (specified in `runtime.txt`)
+- Install dependencies from `requirements.txt`
+- Install system packages from `packages.txt` (if needed)
+
+**Note**: The first deployment may take several minutes as it downloads the Faster R-CNN model from Hugging Face.
+
 ## Security
 
 ⚠️ **Important**: This application is for demonstration purposes. Before production use:
