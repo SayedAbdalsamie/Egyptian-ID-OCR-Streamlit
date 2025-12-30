@@ -6,9 +6,12 @@ from PIL import Image
 from dotenv import load_dotenv
 
 # Set OpenCV to use headless mode (no GUI dependencies)
+# These must be set before any cv2 import
 os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '0'
-# Disable GUI features in OpenCV
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+os.environ['OPENCV_DISABLE_OPENCL'] = '1'
+# Try to work around libGL.so.1 issue by using software rendering
+os.environ['LIBGL_ALWAYS_SOFTWARE'] = '1'
 
 from services.detection_service import DetectionService
 from services.crop_service import CropService
