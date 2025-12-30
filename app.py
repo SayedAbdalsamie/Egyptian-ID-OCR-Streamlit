@@ -1,17 +1,29 @@
 import os
+import sys
 import uuid
 import json
 import streamlit as st
 from PIL import Image
 from dotenv import load_dotenv
 
-# Set OpenCV to use headless mode (no GUI dependencies)
-# These must be set before any cv2 import
-os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '0'
-os.environ['QT_QPA_PLATFORM'] = 'offscreen'
-os.environ['OPENCV_DISABLE_OPENCL'] = '1'
-# Try to work around libGL.so.1 issue by using software rendering
-os.environ['LIBGL_ALWAYS_SOFTWARE'] = '1'
+# Try to fix OpenCV installation on first import
+# This runs the post-install script if needed
+try:
+    from services.cv2_wrapper import cv2
+except ImportError as e:
+    # If cv2 import fails, try to fix it
+    if 'libGL' in str(e) or 'libGL.so.1' in str(e):
+        st.error("""
+        **OpenCV Import Error**
+        
+        The application is trying to use the GUI version of OpenCV, but the required 
+        libraries are not available in this headless environment.
+        
+        Please ensure `opencv-python-headless` is installed instead of `opencv-python`.
+        """)
+        st.stop()
+    else:
+        raise
 
 from services.detection_service import DetectionService
 from services.crop_service import CropService
