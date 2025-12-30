@@ -1,5 +1,0 @@
-# Constraints file to force opencv-python-headless
-opencv-python-headless>=4.8.0
-!opencv-python
-!opencv-contrib-python
-
