@@ -28,6 +28,44 @@ if sys.platform == 'linux':
                 os.environ['LD_LIBRARY_PATH'] = path
 
 # Try to import cv2 with error handling
+# First, try to use ctypes to load libGL.so.1 if it exists but isn't found
+if sys.platform == 'linux':
+    try:
+        import ctypes
+        import ctypes.util
+        
+        # Try to find and load libGL.so.1 manually
+        libgl_paths = [
+            '/usr/lib/x86_64-linux-gnu/libGL.so.1',
+            '/usr/lib/libGL.so.1',
+            '/lib/x86_64-linux-gnu/libGL.so.1',
+            '/lib/libGL.so.1',
+        ]
+        
+        libgl_loaded = False
+        for lib_path in libgl_paths:
+            if os.path.exists(lib_path):
+                try:
+                    ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
+                    libgl_loaded = True
+                    break
+                except Exception:
+                    continue
+        
+        # Also try using ctypes.util.find_library
+        if not libgl_loaded:
+            lib_path = ctypes.util.find_library('GL')
+            if lib_path:
+                try:
+                    ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
+                    libgl_loaded = True
+                except Exception:
+                    pass
+    except Exception:
+        # If ctypes approach fails, continue with normal import
+        pass
+
+# Now try to import cv2
 try:
     import cv2
     # Verify it's working by checking a simple function
@@ -43,9 +81,8 @@ except ImportError as e:
             "OpenCV requires libGL.so.1 but it cannot be found. "
             "This usually happens when opencv-python (GUI version) is installed "
             "instead of opencv-python-headless. "
-            "Please ensure opencv-python-headless is installed: "
-            "pip uninstall opencv-python opencv-contrib-python && "
-            "pip install opencv-python-headless"
+            "The system packages are installed, but OpenCV still cannot find the library. "
+            "This may be a library path issue or the wrong OpenCV package is installed."
         ) from e
     else:
         raise
