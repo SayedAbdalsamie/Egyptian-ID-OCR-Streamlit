@@ -2,25 +2,57 @@ import os
 import sys
 import uuid
 import json
+import subprocess
 import streamlit as st
 from PIL import Image
 from dotenv import load_dotenv
 
-# Try to fix OpenCV installation on first import
-# This runs the post-install script if needed
+# Try to fix OpenCV installation on startup if needed
+# Check if we're using the GUI version and switch to headless
+if 'OPENCV_FIXED' not in os.environ:
+    try:
+        import cv2
+        cv2_path = cv2.__file__ if hasattr(cv2, '__file__') else ''
+        # Check if GUI version is installed
+        if 'opencv-python' in cv2_path and 'headless' not in cv2_path:
+            # Try to fix it (this will only work if we have write permissions)
+            try:
+                subprocess.check_call([
+                    sys.executable, "-m", "pip", "uninstall", "-y", 
+                    "opencv-python", "opencv-contrib-python"
+                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.check_call([
+                    sys.executable, "-m", "pip", "install", 
+                    "opencv-python-headless>=4.8.0"
+                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                # Reload the module
+                if 'cv2' in sys.modules:
+                    del sys.modules['cv2']
+            except Exception:
+                # If we can't fix it, continue and let the wrapper handle it
+                pass
+        os.environ['OPENCV_FIXED'] = '1'
+    except ImportError:
+        # cv2 not installed yet, will be handled by wrapper
+        pass
+
+# Now try to import using the wrapper
 try:
     from services.cv2_wrapper import cv2
 except ImportError as e:
-    # If cv2 import fails, try to fix it
-    if 'libGL' in str(e) or 'libGL.so.1' in str(e):
+    # If cv2 import fails, show a helpful error
+    error_msg = str(e)
+    if 'libGL' in error_msg or 'libGL.so.1' in error_msg:
         st.error("""
         **OpenCV Import Error**
         
-        The application is trying to use the GUI version of OpenCV, but the required 
-        libraries are not available in this headless environment.
+        The application detected that the GUI version of OpenCV is installed, 
+        but the required libraries (libGL.so.1) are not available in this headless environment.
         
-        Please ensure `opencv-python-headless` is installed instead of `opencv-python`.
+        **Solution**: The application needs `opencv-python-headless` instead of `opencv-python`.
+        This should be automatically handled, but if you see this error, please contact support.
         """)
+        st.code(f"Error details: {error_msg}")
         st.stop()
     else:
         raise
