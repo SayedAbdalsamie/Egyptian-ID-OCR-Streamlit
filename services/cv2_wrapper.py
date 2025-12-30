@@ -28,41 +28,56 @@ if sys.platform == 'linux':
                 os.environ['LD_LIBRARY_PATH'] = path
 
 # Try to import cv2 with error handling
-# First, try to use ctypes to load libGL.so.1 if it exists but isn't found
+# CRITICAL: Preload libGL.so.1 using ctypes BEFORE importing cv2
+# This must happen before OpenCV tries to load it
 if sys.platform == 'linux':
     try:
         import ctypes
         import ctypes.util
+        import glob
         
-        # Try to find and load libGL.so.1 manually
+        # Try to find and load libGL.so.1 manually - be very aggressive
+        # Check multiple possible locations
         libgl_paths = [
             '/usr/lib/x86_64-linux-gnu/libGL.so.1',
+            '/usr/lib/x86_64-linux-gnu/libGL.so',
             '/usr/lib/libGL.so.1',
+            '/usr/lib/libGL.so',
             '/lib/x86_64-linux-gnu/libGL.so.1',
+            '/lib/x86_64-linux-gnu/libGL.so',
             '/lib/libGL.so.1',
+            '/lib/libGL.so',
         ]
+        
+        # Also search for any libGL* files
+        for pattern in ['/usr/lib/x86_64-linux-gnu/libGL*', '/usr/lib/libGL*', '/lib/x86_64-linux-gnu/libGL*', '/lib/libGL*']:
+            libgl_paths.extend(glob.glob(pattern))
         
         libgl_loaded = False
         for lib_path in libgl_paths:
-            if os.path.exists(lib_path):
+            if os.path.exists(lib_path) and os.path.isfile(lib_path):
                 try:
+                    # Use RTLD_GLOBAL to make it available to all modules
                     ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
                     libgl_loaded = True
                     break
-                except Exception:
+                except (OSError, AttributeError):
                     continue
         
         # Also try using ctypes.util.find_library
         if not libgl_loaded:
-            lib_path = ctypes.util.find_library('GL')
-            if lib_path:
-                try:
-                    ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
-                    libgl_loaded = True
-                except Exception:
-                    pass
-    except Exception:
-        # If ctypes approach fails, continue with normal import
+            for lib_name in ['GL', 'libGL.so.1', 'libGL']:
+                lib_path = ctypes.util.find_library(lib_name)
+                if lib_path:
+                    try:
+                        ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)
+                        libgl_loaded = True
+                        break
+                    except (OSError, AttributeError):
+                        continue
+    except Exception as e:
+        # If ctypes approach fails, log but continue
+        # The import will fail with a better error message
         pass
 
 # Now try to import cv2
