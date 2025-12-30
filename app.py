@@ -2,9 +2,43 @@ import os
 import sys
 import uuid
 import json
+import subprocess
 import streamlit as st
 from PIL import Image
 from dotenv import load_dotenv
+
+# Try to fix OpenCV installation BEFORE importing anything that uses cv2
+# This runs once per app instance
+if 'OPENCV_FIX_ATTEMPTED' not in os.environ:
+    try:
+        # Check if we have the GUI version installed
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "show", "opencv-python"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode == 0:
+            # GUI version is installed, try to fix it
+            try:
+                subprocess.run(
+                    [sys.executable, "-m", "pip", "uninstall", "-y", "opencv-python", "opencv-contrib-python"],
+                    capture_output=True,
+                    timeout=30
+                )
+                subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "--no-deps", "opencv-python-headless>=4.8.0"],
+                    capture_output=True,
+                    timeout=60
+                )
+                # Clear cv2 from cache if it was imported
+                if 'cv2' in sys.modules:
+                    del sys.modules['cv2']
+            except Exception:
+                pass  # If fix fails, continue and let wrapper handle it
+    except Exception:
+        pass  # If check fails, continue normally
+    os.environ['OPENCV_FIX_ATTEMPTED'] = '1'
 
 # Import cv2 through wrapper - this must happen before any service imports
 # The wrapper will handle environment setup and provide better error messages
@@ -16,22 +50,21 @@ except ImportError as e:
     st.error("""
     ## ⚠️ OpenCV Import Error
     
-    The application cannot import OpenCV because the GUI version (`opencv-python`) 
-    is installed instead of the headless version (`opencv-python-headless`).
+    The application cannot import OpenCV. This is a known issue with Streamlit Cloud deployments.
     
     **The Problem:**
-    - `paddleocr` or `paddlepaddle` dependencies are installing `opencv-python` (GUI version)
-    - The GUI version requires `libGL.so.1` which is not available in headless environments
-    - Even though system packages are installed, the library path may not be correct
+    - `paddleocr`/`paddlepaddle` installs `opencv-python` (GUI version) which requires `libGL.so.1`
+    - Even though system packages are installed, OpenCV cannot find the library
+    - The automatic fix attempt may have failed due to permission restrictions
     
     **Error Details:**
     """)
     st.code(error_msg, language='text')
-    st.info("""
-    **Possible Solutions:**
-    1. The system packages (libGL) are installed, but OpenCV still can't find them
-    2. We need to ensure `opencv-python-headless` is used instead
-    3. This may require manual intervention or a different deployment approach
+    st.warning("""
+    **Workaround Options:**
+    1. This may require manual intervention in the Streamlit Cloud environment
+    2. Consider using a different deployment platform that allows post-install scripts
+    3. Or use a different OCR library that doesn't have this dependency conflict
     """)
     st.stop()
 
